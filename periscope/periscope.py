@@ -148,7 +148,7 @@ class Periscope:
         #if not os.path.isfile(filename):
             #raise InvalidFileException(filename, "does not exist")
 
-        log.info("Searching subtitles for %s with langs %s" %(filename, langs))
+        log.debug("Searching subtitles for %s with langs %s" %(filename, langs))
         subtitles = []
         q = Queue()
         for name in self.pluginNames:
