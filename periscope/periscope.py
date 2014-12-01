@@ -23,15 +23,12 @@ import sys
 import os
 import threading
 import logging
-import ntpath
 from Queue import Queue
 
 import traceback
 import ConfigParser
-
 import socket
 socket.setdefaulttimeout(60)
-
 log = logging.getLogger(__name__)
 
 try:
@@ -150,19 +147,14 @@ class Periscope:
         '''Searches subtitles within the active plugins and returns all found matching subtitles ordered by language then by plugin.'''
         #if not os.path.isfile(filename):
             #raise InvalidFileException(filename, "does not exist")
-<<<<<<< HEAD
-        filename_clean= ntpath.basename(filename)
-        log.info("Searching subtitles for %s" %(filename_clean))
-=======
 
         log.info("Searching subtitles for %s with langs %s" %(filename, langs))
->>>>>>> upstream/master
         subtitles = []
         q = Queue()
         for name in self.pluginNames:
             try :
                 plugin = getattr(plugins, name)(self.config, self.cache_path)
-                #log.info("Searching on %s " %plugin.__class__.__name__)
+                log.info("Searching on %s " %plugin.__class__.__name__)
                 thread = threading.Thread(target=plugin.searchInThread, args=(q, filename, langs))
                 thread.start()
             except ImportError :
@@ -218,7 +210,6 @@ class Periscope:
     def downloadSubtitle(self, filename, langs=None, interactive=False):
         ''' Takes a filename and a language and creates ONE subtitle through plugins if interactive == True asks before downloading'''
         subtitles = self.listSubtitles(filename, langs)
-        #subtitles = self.__orderSubtitles__(subtitles)
         if subtitles:
             log.debug("All subtitles: ")
             log.debug(subtitles)    
@@ -227,35 +218,6 @@ class Periscope:
             return None
         
         
-<<<<<<< HEAD
-    def attemptDownloadSubtitle(self, subtitles, langs):
-        for n in range(0,len(subtitles)):
-            subtitle = subtitles[n]
-            if subtitle:
-                log.info("Trying to download subtitle #%s: %s" %(n+1,subtitle['link']))
-                #Download the subtitle
-                try:
-                    subpath = subtitle["plugin"].createFile(subtitle)
-                    if subpath:    
-                        subtitle["subtitlepath"] = subpath
-                        return subtitle
-                    #else:
-                        # throw exception to remove it
-                        #raise Exception("Not downloaded")
-                        #log.info("Subtitle not downloaded")
-                except Exception as inst:
-                    # Could not download that subtitle, remove it
-                    log.warn("Subtitle %s could not be downloaded, trying the next on the list" %subtitle['link'])
-                    etype = sys.exc_info()[0]
-                    evalue = sys.exc_info()[1]
-                    etb = traceback.extract_tb(sys.exc_info()[2])
-                    log.error("Type[%s], Message [%s], Traceback[%s]" % (etype,evalue,etb))
-                    subtitles.remove(subtitle)
-                    return self.attemptDownloadSubtitle(subtitles, langs)
-            else :
-                log.error("No subtitles could be chosen.")
-                return None        
-=======
     def attemptDownloadSubtitle(self, subtitles, langs, interactive=False):
         subtitle = self.selectBestSubtitle(subtitles, langs, interactive)
         if subtitle:
@@ -266,9 +228,9 @@ class Periscope:
                 if subpath:
                     subtitle["subtitlepath"] = subpath
                     return subtitle
-                else:
+                #else:
                     # throw exception to remove it
-                    raise Exception("Not downloaded")
+                    #raise Exception("Not downloaded")
             except Exception as inst:
                 # Could not download that subtitle, remove it
                 log.warn("Subtitle %s could not be downloaded, trying the next on the list" %subtitle['link'])
@@ -281,7 +243,6 @@ class Periscope:
         else :
             log.error("No subtitles could be chosen.")
             return None
->>>>>>> upstream/master
 
     def guessFileData(self, filename):
         subdb = plugins.SubtitleDatabase.SubtitleDB(None)
