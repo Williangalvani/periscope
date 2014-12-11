@@ -29,6 +29,7 @@ import zipfile
 import shutil
 import ConfigParser
 import random
+import socket
 
 import cookielib, urllib2, urllib, sys, re, os, webbrowser, time, unicodedata, logging, urlparse, requests
 from BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
@@ -165,17 +166,21 @@ class LegendasTV(SubtitleDatabase.SubtitleDB):
             login_data = urllib.urlencode({'data[User][username]':self.user,'data[User][password]':self.password})
             
             try:
-                response = opener.open(self.url+'/login',login_data,timeout=20).read()
+                response = opener.open(self.url+'/login',login_data,timeout=10).read()
                 #log.debug(" Tentando logar no LegendasTV")
+            except socket.timeout:
+                log.info(" Nao foi possivel pesquisar no LegendasTV - Timeout")
             except IOError, e:
                 if hasattr(e, 'code') and hasattr(e, 'reason') and e.code in (500,501,502,503,504,404):
                     log.info(" LegendasTV nao disponivel. Nao foi possivel logar")
                     naodisponivel = True
-                if hasattr(e, 'code') and hasattr(e, 'reason') and not e.code in (500,501,502,503,504,404):
-                    log.info(" Nao foi possivel logar no LegendasTV. Erro: " + str(e.code) + " " +str(e.reason))
+                elif e.reason.message == 'timed out':
+                    log.info(" Nao foi possivel pesquisar no LegendasTV - Timeout")
+                else:
+                    log.info(" Nao foi possivel logar no LegendasTV. Erro: " + str(e))
                 Logado = False
-            except:
-                log.info(" Nao foi possivel logar no LegendasTV. Erro desconhecido")
+            except e:
+                log.info(" Nao foi possivel pesquisar no LegendasTV - " + str(e))
                 Logado = False
             else:
                 if response.__contains__('alert alert-error'):
@@ -222,7 +227,7 @@ class LegendasTV(SubtitleDatabase.SubtitleDB):
             except:
                 log.error("General error:" + str(sys.exc_info()[0]))
         else:
-            raise Exception("Unknown file format: " + fname)
+            log.error("Unknown file format: " + fname)
         
         extractedFiles.append(fname)    
 
@@ -243,18 +248,22 @@ class LegendasTV(SubtitleDatabase.SubtitleDB):
         requests_log.setLevel(logging.WARNING)
         try:
             download_url = self.url + "/downloadarquivo/" + str(url)
-            ltv_sub = opener.open(download_url,timeout=20).read()
+            ltv_sub = opener.open(download_url,timeout=10).read()
+        except socket.timeout:
+            log.info(" Nao foi possivel pesquisar no LegendasTV - Timeout")
         except IOError, e:
-            if hasattr(e, 'code') and hasattr(e, 'reason') and not e.code in (500,501,502,503,504,404):
-                log.info(" Nao foi possivel fazer o download no LegendasTV. Erro: " + str(e.code) + " " +str(e.reason))
-            return False
             if hasattr(e, 'code') and hasattr(e, 'reason') and e.code in (500,501,502,503,504,404):
-                log.info(" LegendasTV nao disponivel")
+                log.info(" LegendasTV nao disponivel. Nao foi possivel logar")
+                naodisponivel = True
+            elif e.reason.message == 'timed out':
+                log.info(" Nao foi possivel pesquisar no LegendasTV - Timeout")
+            else:
+                log.info(" Nao foi possivel logar no LegendasTV. Erro: " + str(e))
             return False
-        except:
-            log.info(" Nao foi possivel fazer download no LegendasTV. Erro desconhecido")             
+        except e:
+            log.info(" Nao foi possivel pesquisar no LegendasTV - " + str(e))
             return False            
-            
+
         os.makedirs(extract_path)
         fname = os.path.join(extract_path,str(url))
         fname += '.rar'
@@ -395,20 +404,18 @@ class LegendasTV(SubtitleDatabase.SubtitleDB):
                 langCode = 'portugues-pt'
             if langs[0] == 'es':
                 langCode = 'espanhol'
-            
-       
+
         search = title.lower() + ' ' + year
         search_url = self.url +'/util/carrega_legendas_busca/' +search.replace(' ','%20')+ '/1'
         #log.debug(" Search URL: " + str(search_url))
         #log.debug(search)
         try:
-            response = opener.open(search_url,timeout=20).read()
+            response = opener.open(search_url,timeout=10).read()
             result = response.lower()
             soup = BeautifulSoup(result)        
             qtdlegendas = result.count('span class="number number_')
             
             if qtdlegendas > 0:
-            
                 result =[]
                 #log.debug(" Resultado da busca: " + str(qtdlegendas) + " legenda(s)")
                 # Legenda com destaque    
@@ -422,8 +429,7 @@ class LegendasTV(SubtitleDatabase.SubtitleDB):
                     #log.debug(entry)                
                     if  langCode == self.Uconvert(lang):
                         result.append(entry)
-    
-            
+
                 # Legenda sem destaque
                 for html in soup.findAll("div",{"class":""}):
                     a = html.find("a")
@@ -435,8 +441,7 @@ class LegendasTV(SubtitleDatabase.SubtitleDB):
                     #log.debug(entry)
                     if  langCode == self.Uconvert(lang):
                         result.append(entry)
-                    
-                    
+
                 qtd = len(result)    
                 if qtd > 0:
                     for legendas in result:
@@ -462,16 +467,16 @@ class LegendasTV(SubtitleDatabase.SubtitleDB):
                     log.debug(" Nao houve resultados para a busca desse episodio")
             else:
                 log.debug(" Nao houve resultados para a busca desse episodio")
-            
+        except socket.timeout:
+            log.info(" Nao foi possivel pesquisar no LegendasTV - Timeout")
         except IOError, e:
-            if hasattr(e, 'code') and hasattr(e, 'reason') and not e.code in (500,501,502,503,504,404):
-                log.info(" Nao foi possivel pesquisar no LegendasTV. Erro: " + str(e.code) + " " +str(e.reason))
             if hasattr(e, 'code') and hasattr(e, 'reason') and e.code in (500,501,502,503,504,404):
-                log.info(" LegendasTV nao disponivel")
+                log.info(" LegendasTV nao disponivel. Nao foi possivel logar")
                 naodisponivel = True
+            elif e.reason.message == 'timed out':
+                log.info(" Nao foi possivel pesquisar no LegendasTV - Timeout")
             else:
-                log.info(" Nao foi possivel pesquisar no LegendasTV. Sem erro")                
-        
+                log.info(" Nao foi possivel logar no LegendasTV. Erro: " + str(e))
         return sub1
         
     def LegendasTVSeries(self,file_original_path,tvshow, season, episode, teams, langs):
@@ -521,7 +526,7 @@ class LegendasTV(SubtitleDatabase.SubtitleDB):
         search_url = self.url +'/util/carrega_legendas_busca/' +search.replace(' ','%20')+ '/1'
         #log.debug(" Search URL (0): " + str(search_url))
         try:
-            response = opener.open(search_url,timeout=20).read()
+            response = opener.open(search_url,timeout=10).read()
             result = response.lower()
             
             soup = BeautifulSoup(result)        
@@ -537,21 +542,24 @@ class LegendasTV(SubtitleDatabase.SubtitleDB):
                 search_url = self.url +'/util/carrega_legendas_busca/' +search.replace(' ','%20')+ '/1'
                 #log.debug(" Search URL (1): " + str(search_url))
                 try:
-                    response = opener.open(search_url,timeout=20).read()
+                    response = opener.open(search_url,timeout=10).read()
                     result = response.lower()
-                    
                     soup = BeautifulSoup(result)        
                     qtdlegendas = result.count('span class="number number_')
+                except socket.timeout:
+                    log.info(" Nao foi possivel pesquisar no LegendasTV - Timeout")
+                    return sub1
                 except IOError, e:
-                    if hasattr(e, 'code') and hasattr(e, 'reason') and not e.code in (500,501,502,503,504,404):
-                        log.info(" Nao foi possivel pesquisar no LegendasTV. Erro: " + str(e.code) + " " +str(e.reason))
                     if hasattr(e, 'code') and hasattr(e, 'reason') and e.code in (500,501,502,503,504,404):
-                        log.info(" LegendasTV nao disponivel")
+                        log.info(" LegendasTV nao disponivel. Nao foi possivel logar")
                         naodisponivel = True
+                    elif e.reason.message == 'timed out':
+                        log.info(" Nao foi possivel pesquisar no LegendasTV - Timeout")
+                    else:
+                        log.info(" Nao foi possivel logar no LegendasTV. Erro: " + str(e))
                     return sub1
                 except e:
-                    log.info(e)
-                    log.info(" Nao foi possivel pesquisar no LegendasTV. Erro desconhecido")
+                    log.info(" Nao foi possivel pesquisar no LegendasTV - " + str(e)) 
                     return sub1
 
             if qtdlegendas <= 0:
@@ -559,20 +567,24 @@ class LegendasTV(SubtitleDatabase.SubtitleDB):
                 search_url = self.url +'/util/carrega_legendas_busca/' +search.replace(' ','%20')+ '/1'
                 #log.debug(" Search URL (2): " + str(search_url))
                 try:
-                    response = opener.open(search_url,timeout=20).read()
+                    response = opener.open(search_url,timeout=10).read()
                     result = response.lower()
-                    
                     soup = BeautifulSoup(result)        
                     qtdlegendas = result.count('span class="number number_')
-                except IOError, e:
-                    if hasattr(e, 'code') and hasattr(e, 'reason') and not e.code in (500,501,502,503,504,404):
-                        log.info(" Nao foi possivel pesquisar no LegendasTV. Erro: " + str(e.code) + " " +str(e.reason))
-                    if hasattr(e, 'code') and hasattr(e, 'reason') and e.code in (500,501,502,503,504,404):
-                        log.info(" LegendasTV nao disponivel")
-                        naodisponivel = True
+                except socket.timeout:
+                    log.info(" Nao foi possivel pesquisar no LegendasTV - Timeout")
                     return sub1
-                except:
-                    log.info(" Nao foi possivel pesquisar no LegendasTV. Erro desconhecido")
+                except IOError, e:
+                    if hasattr(e, 'code') and hasattr(e, 'reason') and e.code in (500,501,502,503,504,404):
+                        log.info(" LegendasTV nao disponivel. Nao foi possivel logar")
+                        naodisponivel = True
+                    elif e.reason.message == 'timed out':
+                        log.info(" Nao foi possivel pesquisar no LegendasTV - Timeout")
+                    else:
+                        log.info(" Nao foi possivel logar no LegendasTV. Erro: " + str(e)) 
+                    return sub1
+                except e:
+                    log.info(" Nao foi possivel pesquisar no LegendasTV - " + str(e)) 
                     return sub1
 
             if qtdlegendas <= 0:
@@ -580,22 +592,26 @@ class LegendasTV(SubtitleDatabase.SubtitleDB):
                 search_url = self.url +'/util/carrega_legendas_busca/' +search.replace(' ','%20')+ '/1'
                 #log.debug(" Search URL (3): " + str(search_url))
                 try:
-                    response = opener.open(search_url,timeout=20).read()
+                    response = opener.open(search_url,timeout=10).read()
                     result = response.lower()
-                    
                     soup = BeautifulSoup(result)        
                     qtdlegendas = result.count('span class="number number_')
+                except socket.timeout:
+                    log.info(" Nao foi possivel pesquisar no LegendasTV - Timeout")
+                    return sub1
                 except IOError, e:
-                    if hasattr(e, 'code') and hasattr(e, 'reason') and not e.code in (500,501,502,503,504,404):
-                        log.info(" Nao foi possivel pesquisar no LegendasTV. Erro: " + str(e.code) + " " +str(e.reason))
                     if hasattr(e, 'code') and hasattr(e, 'reason') and e.code in (500,501,502,503,504,404):
+                        log.info(" LegendasTV nao disponivel. Nao foi possivel logar")
                         naodisponivel = True
-                        log.info(" LegendasTV nao disponivel")
+                    elif e.reason.message == 'timed out':
+                        log.info(" Nao foi possivel pesquisar no LegendasTV - Timeout")
+                    else:
+                        log.info(" Nao foi possivel logar no LegendasTV. Erro: " + str(e)) 
                     return sub1
-                except:
-                    log.info(" Nao foi possivel pesquisar no LegendasTV. Erro desconhecido") 
+                except e:
+                    log.info(" Nao foi possivel pesquisar no LegendasTV - " + str(e)) 
                     return sub1
-                    
+
             if qtdlegendas > 0:
             
                 result =[]
@@ -678,20 +694,21 @@ class LegendasTV(SubtitleDatabase.SubtitleDB):
                 else:
                     log.debug(" Nao houve resultados para a busca desse episodio")
             else:
-                log.debug(" Nao houve resultados para a busca desse episodio")        
-            
+                log.debug(" Nao houve resultados para a busca desse episodio")
+        except socket.timeout:
+            log.info(" Nao foi possivel pesquisar no LegendasTV - Timeout")
         except IOError, e:
-            if hasattr(e, 'code') and hasattr(e, 'reason') and not e.code in (500,501,502,503,504,404):
-                log.info(" Nao foi possivel pesquisar no LegendasTV. Erro: " + str(e.code) + " " +str(e.reason))
             if hasattr(e, 'code') and hasattr(e, 'reason') and e.code in (500,501,502,503,504,404):
-                log.info(" LegendasTV nao disponivel")
+                log.info(" LegendasTV nao disponivel. Nao foi possivel logar")
                 naodisponivel = True
+            elif e.reason.message == 'timed out':
+                log.info(" Nao foi possivel pesquisar no LegendasTV - Timeout")
             else:
-                log.info(" Nao foi possivel pesquisar no LegendasTV. Sem erro")
-            return sub1
-        except Exception, err:
-            print Exception, err        
-            log.info(" Nao foi possivel pesquisar no LegendasTV. Erro desconhecido")                           
+                log.info(" Nao foi possivel logar no LegendasTV. Erro: " + str(e))
+        except e:
+            log.info(" Nao foi possivel logar no LegendasTV. Erro: " + str(e))            
+        #except:
+         #   log.info(" Nao foi possivel pesquisar no LegendasTV. Exception")
         return sub1
 
     def chomp(self,s):
