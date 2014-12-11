@@ -179,8 +179,8 @@ class LegendasTV(SubtitleDatabase.SubtitleDB):
                 else:
                     log.info(" Nao foi possivel logar no LegendasTV. Erro: " + str(e))
                 Logado = False
-            except e:
-                log.info(" Nao foi possivel pesquisar no LegendasTV - " + str(e))
+            except:
+                log.info(" Nao foi possivel pesquisar no LegendasTV.")
                 Logado = False
             else:
                 if response.__contains__('alert alert-error'):
@@ -260,8 +260,8 @@ class LegendasTV(SubtitleDatabase.SubtitleDB):
             else:
                 log.info(" Nao foi possivel logar no LegendasTV. Erro: " + str(e))
             return False
-        except e:
-            log.info(" Nao foi possivel pesquisar no LegendasTV - " + str(e))
+        except:
+            log.info(" Nao foi possivel pesquisar no LegendasTV.")
             return False            
 
         os.makedirs(extract_path)
@@ -558,8 +558,8 @@ class LegendasTV(SubtitleDatabase.SubtitleDB):
                     else:
                         log.info(" Nao foi possivel logar no LegendasTV. Erro: " + str(e))
                     return sub1
-                except e:
-                    log.info(" Nao foi possivel pesquisar no LegendasTV - " + str(e)) 
+                except:
+                    log.info(" Nao foi possivel pesquisar no LegendasTV.")
                     return sub1
 
             if qtdlegendas <= 0:
@@ -608,8 +608,8 @@ class LegendasTV(SubtitleDatabase.SubtitleDB):
                     else:
                         log.info(" Nao foi possivel logar no LegendasTV. Erro: " + str(e)) 
                     return sub1
-                except e:
-                    log.info(" Nao foi possivel pesquisar no LegendasTV - " + str(e)) 
+                except:
+                    log.info(" Nao foi possivel pesquisar no LegendasTV.")
                     return sub1
 
             if qtdlegendas > 0:
@@ -705,8 +705,8 @@ class LegendasTV(SubtitleDatabase.SubtitleDB):
                 log.info(" Nao foi possivel pesquisar no LegendasTV - Timeout")
             else:
                 log.info(" Nao foi possivel logar no LegendasTV. Erro: " + str(e))
-        except e:
-            log.info(" Nao foi possivel logar no LegendasTV. Erro: " + str(e))            
+        except:
+            log.info(" Nao foi possivel pesquisar no LegendasTV.")            
         #except:
          #   log.info(" Nao foi possivel pesquisar no LegendasTV. Exception")
         return sub1
