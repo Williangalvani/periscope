@@ -313,10 +313,12 @@ class OpenSubtitles(SubtitleDatabase.SubtitleDB):
                             log.debug(" Tv-show matched using REGEX");
                             (tvshow_r, season_r, episode_r, epname_r, dados_r, teams_r) = matches_tvshow.groups()
                             log.debug(matches_tvshow.groups());	
-                            if teams.lower() == teams_r.lower() and r['UserNickName'] in ("noriegaRJ","AlbustigriS") and season.lower() == season_r.lower()  and episode.lower() == episode_r.lower():
+                            # if teams.lower() == teams_r.lower() and r['UserNickName'] in ("noriegaRJ","AlbustigriS") and season.lower() == season_r.lower()  and episode.lower() == episode_r.lower():
+                            if teams.lower() == teams_r.lower() and season.lower() == season_r.lower()  and episode.lower() == episode_r.lower():
                                 log.info(" Tv-show group matched. Filename: " + teams + " Subtitle: " + teams_r + " User: " + r['UserNickName'])
                                 sublinks.append(result)
-                            elif dados.lower().find("web-dl") >= 0 and dados_r.lower().find("web-dl") >= 0 and r['UserNickName'] in ("noriegaRJ","AlbustigriS") and season.lower() == season_r.lower()  and episode.lower() == episode_r.lower():	
+                            elif dados.lower().find("web-dl") >= 0 and dados_r.lower().find("web-dl") >= 0 and season.lower() == season_r.lower()  and episode.lower() == episode_r.lower():
+                            # elif dados.lower().find("web-dl") >= 0 and dados_r.lower().find("web-dl") >= 0 and r['UserNickName'] in ("noriegaRJ","AlbustigriS") and season.lower() == season_r.lower()  and episode.lower() == episode_r.lower():
                                 log.info(" Tv-show release has WEB-DL on it. Release: " + r["MovieReleaseName"] + " User: " + r['UserNickName'])
                                 sublinks.append(result)								
                             else: 
@@ -326,10 +328,12 @@ class OpenSubtitles(SubtitleDatabase.SubtitleDB):
                             log.debug(" MovieReleaseName: " + r["MovieReleaseName"].lower())
                             log.debug(" Subtitle filename: " + r['SubFileName'])
                             #log.debug(r["MovieReleaseName"].lower() + ' s'+season+'e'+episode)
-                            if r["MovieReleaseName"].lower().find(teams.lower()) >= 0 and r['UserNickName'] in ("noriegaRJ","AlbustigriS") and r["MovieReleaseName"].lower().find('s'+season+'e'+episode) > 0 :	
+                            # if r["MovieReleaseName"].lower().find(teams.lower()) >= 0 and r['UserNickName'] in ("noriegaRJ","AlbustigriS") and r["MovieReleaseName"].lower().find('s'+season+'e'+episode) > 0 :
+                            if r["MovieReleaseName"].lower().find(teams.lower()) >= 0 and r["MovieReleaseName"].lower().find('s'+season+'e'+episode) > 0 :
                                 log.info(" Tv-show release has group on it. Release: " + r["MovieReleaseName"] + " User: " + r['UserNickName'])
                                 sublinks.append(result)
-                            elif dados.lower().find("web-dl") >= 0 and r["MovieReleaseName"].lower().find("web-dl") >= 0 and r['UserNickName'] in ("noriegaRJ","AlbustigriS") and r['SubFileName'].lower().find('s'+season+'e'+episode) > 0 :	
+                            # elif dados.lower().find("web-dl") >= 0 and r["MovieReleaseName"].lower().find("web-dl") >= 0 and r['UserNickName'] in ("noriegaRJ","AlbustigriS") and r['SubFileName'].lower().find('s'+season+'e'+episode) > 0 :
+                            elif dados.lower().find("web-dl") >= 0 and r["MovieReleaseName"].lower().find("web-dl") >= 0 and r['SubFileName'].lower().find('s'+season+'e'+episode) > 0 :
                                 log.info(" Tv-show release has WEB-DL on it. Release: " + r["MovieReleaseName"] + " User: " + r['UserNickName'])
                                 sublinks.append(result)							
                             else:							
